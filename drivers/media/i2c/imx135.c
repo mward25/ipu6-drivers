@@ -27,6 +27,7 @@
 #include <linux/regmap.h>
 #include <media/imx135.h>
 #include <linux/gpio.h>
+#include <linux/gpio/consumer.h>
 #include <linux/module.h>
 
 #include <linux/kernel.h>
@@ -34,7 +35,6 @@
 #include <linux/seq_file.h>
 #include <linux/of.h>
 #include <linux/of_device.h>
-#include <linux/of_gpio.h>
 
 #include "nvc_utilities.h"
 
@@ -3652,10 +3652,10 @@ imx135_eeprom_device_init(struct imx135_info *info)
 		info->eeprom[i].adap = i2c_get_adapter(
 				info->i2c_client->adapter->nr);
 		memset(&info->eeprom[i].brd, 0, sizeof(info->eeprom[i].brd));
-		strncpy(info->eeprom[i].brd.type, dev_name,
+		memcpy(info->eeprom[i].brd.type, dev_name,
 				sizeof(info->eeprom[i].brd.type));
 		info->eeprom[i].brd.addr = IMX135_EEPROM_ADDRESS + i;
-		info->eeprom[i].i2c_client = i2c_new_device(
+		info->eeprom[i].i2c_client = i2c_new_client_device(
 				info->eeprom[i].adap, &info->eeprom[i].brd);
 
 		info->eeprom[i].regmap = devm_regmap_init_i2c(
@@ -4213,9 +4213,10 @@ static struct imx135_platform_data *imx135_parse_dt(struct i2c_client *client)
 	}
 
 	of_property_read_string(np, "clocks", &board_info_pdata->mclk_name);
-	board_info_pdata->cam1_gpio = of_get_named_gpio(np, "cam1-gpios", 0);
-	board_info_pdata->reset_gpio = of_get_named_gpio(np, "reset-gpios", 0);
-	board_info_pdata->af_gpio = of_get_named_gpio(np, "af-gpios", 0);
+	board_info_pdata->cam1_gpio =  -ENODEV;
+		//of_get_named_gpio(np, "cam1-gpios", 0);
+	board_info_pdata->reset_gpio = -ENODEV; //of_get_named_gpio(np, "reset-gpios", 0);
+	board_info_pdata->af_gpio = -ENODEV; //of_get_named_gpio(np, "af-gpios", 0);
 
 	board_info_pdata->ext_reg = of_property_read_bool(np, "nvidia,ext_reg");
 
@@ -4226,8 +4227,7 @@ static struct imx135_platform_data *imx135_parse_dt(struct i2c_client *client)
 }
 
 static int
-imx135_probe(struct i2c_client *client,
-			const struct i2c_device_id *id)
+imx135_probe(struct i2c_client *client)
 {
 	struct imx135_info *info;
 	int err;
@@ -4304,7 +4304,7 @@ imx135_probe_fail:
 	return err;
 }
 
-static int
+static void
 imx135_remove(struct i2c_client *client)
 {
 	struct imx135_info *info;
@@ -4315,7 +4315,7 @@ imx135_remove(struct i2c_client *client)
 
 	imx135_remove_debugfs(info);
 	imx135_eeprom_device_release(info);
-	return 0;
+	//return 0;
 }
 
 static const struct i2c_device_id imx135_id[] = {
@@ -4348,3 +4348,9 @@ static void __exit imx135_exit(void)
 
 module_init(imx135_init);
 module_exit(imx135_exit);
+
+/// Was originally from nvidia, but they didn't leave a contact in the file.
+/// NVIDIA: If you see this and want credit, email me.
+MODULE_AUTHOR("Miles Ward <milesward2004@gmail.com>");
+MODULE_DESCRIPTION("IMX135 Driver");
+MODULE_LICENSE("GPL v2");
