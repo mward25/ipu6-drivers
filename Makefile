@@ -92,6 +92,7 @@ export CONFIG_ICAMERA_OV02E10 = m
 export CONFIG_ICAMERA_HM2170 = m
 export CONFIG_ICAMERA_HM2172 = m
 export CONFIG_ICAMERA_GC5035 = m
+export CONFIG_ICAMERA_IMX135 = m
 
 ifeq ($(call version_lt,$(KERNEL_VERSION),$(KV_OV2740)),true)
 export CONFIG_ICAMERA_OV2740 = m
